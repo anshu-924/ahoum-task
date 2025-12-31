@@ -112,7 +112,7 @@ function BookingCard({ booking, isCreator, onUpdate }) {
             Confirm Booking
           </button>
         )}
-        {booking.status !== 'cancelled' && booking.status !== 'completed' && (
+        {isCreator && booking.status !== 'cancelled' && booking.status !== 'completed' && (
           <button
             className="btn btn-secondary"
             onClick={handleCancel}

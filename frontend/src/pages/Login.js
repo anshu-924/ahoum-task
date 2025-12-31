@@ -137,38 +137,7 @@ function Login() {
     }
   };
 
-  // Demo login function (for development/testing only)
-  const handleDemoLogin = async () => {
-    setLoading(true);
-    setError(null);
 
-    try {
-      // This is a demo function - in production, remove this
-      // and only use actual OAuth flow
-      const demoToken = 'demo-token-' + Date.now();
-      
-      // Mock login - replace with actual OAuth
-      const response = {
-        tokens: {
-          access: demoToken,
-          refresh: 'refresh-' + demoToken,
-        },
-        user: {
-          id: 1,
-          email: role === 'creator' ? 'creator@demo.com' : 'user@demo.com',
-          first_name: role === 'creator' ? 'Demo Creator' : 'Demo User',
-          role: role,
-        },
-      };
-
-      login(response.tokens, response.user);
-      navigate(role === 'creator' ? '/creator/dashboard' : '/dashboard');
-    } catch (err) {
-      setError('Demo login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   return (
     <div className="login-page">
@@ -216,21 +185,6 @@ function Login() {
             >
               <span>⚫</span> Continue with GitHub
             </button>
-          </div>
-
-          <div className="demo-section">
-            <hr />
-            <p className="demo-label">For Testing/Demo</p>
-            <button
-              className="btn btn-secondary"
-              onClick={handleDemoLogin}
-              disabled={loading}
-            >
-              {loading ? 'Logging in...' : 'Demo Login'}
-            </button>
-            <p className="demo-note">
-              Demo login creates a temporary session for testing purposes
-            </p>
           </div>
 
           <div className="oauth-setup-note">

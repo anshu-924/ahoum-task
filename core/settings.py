@@ -1,10 +1,14 @@
 import os
+import sys
 from pathlib import Path
 from datetime import timedelta
 from decouple import config
 
 # Build paths
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Detect if running tests
+TESTING = 'test' in sys.argv
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-your-secret-key-change-in-production')
@@ -137,19 +141,22 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
-    'DEFAULT_THROTTLE_CLASSES': [
+}
+
+# Only enable throttling when not testing
+if not TESTING:
+    REST_FRAMEWORK['DEFAULT_THROTTLE_CLASSES'] = [
         'rest_framework.throttling.AnonRateThrottle',
         'rest_framework.throttling.UserRateThrottle',
-    ],
-    'DEFAULT_THROTTLE_RATES': {
+    ]
+    REST_FRAMEWORK['DEFAULT_THROTTLE_RATES'] = {
         'anon': '100/hour',  # Anonymous users: 100 requests per hour
         'user': '1000/hour',  # Authenticated users: 1000 requests per hour
         'auth': '10/minute',  # Auth endpoints: 10 attempts per minute
         'booking': '20/hour',  # Booking creation: 20 per hour
         'session_create': '10/hour',  # Session creation: 10 per hour
         'payment': '10/hour',  # Payment operations: 10 per hour
-    },
-}
+    }
 
 # JWT Configuration
 SIMPLE_JWT = {

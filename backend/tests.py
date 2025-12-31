@@ -143,7 +143,16 @@ class BookingTests(TestCase):
             'user_notes': 'Test booking'
         }
         response = self.client.post('/api/bookings/', data)
+        
+        # Print response for debugging if test fails
+        if response.status_code != status.HTTP_201_CREATED:
+            print(f"Response status: {response.status_code}")
+            print(f"Response data: {response.data}")
+        
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        
+        # Check that response contains id
+        self.assertIn('id', response.data, f"Response missing 'id' field: {response.data}")
         
         # Check total price calculation
         booking = Booking.objects.get(id=response.data['id'])
