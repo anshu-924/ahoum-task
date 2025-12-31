@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { createSession } from '../services/api';
+import { createSession, uploadFile } from '../services/api';
 import './CreateSession.css';
 
 function CreateSession() {
@@ -17,21 +17,69 @@ function CreateSession() {
     session_type: 'online',
     status: 'published',
   });
+  const [thumbnailFile, setThumbnailFile] = useState(null);
+  const [thumbnailPreview, setThumbnailPreview] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [error, setError] = useState(null);
 
   const categories = ['Programming', 'Design', 'Business', 'Meditation', 'Yoga', 'Fitness', 'Music', 'Art', 'Other'];
 
+  const handleThumbnailChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        setError('Please select an image file');
+        return;
+      }
+      
+      // Validate file size (10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        setError('Image size must be less than 10MB');
+        return;
+      }
+      
+      setThumbnailFile(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setThumbnailPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError(null);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading || uploading) {
+      return;
+    }
+    
     setLoading(true);
     setError(null);
 
     try {
-      await createSession(formData);
+      let sessionData = { ...formData };
+      
+      // Upload thumbnail if provided
+      if (thumbnailFile) {
+        setUploading(true);
+        const uploadResult = await uploadFile(thumbnailFile, 'sessions');
+        sessionData.image_url = uploadResult.image_url;
+        sessionData.thumbnail_url = uploadResult.thumbnail_url;
+        setUploading(false);
+      }
+      
+      await createSession(sessionData);
       navigate('/creator/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to create session');
+      setUploading(false);
     } finally {
       setLoading(false);
     }
@@ -75,6 +123,34 @@ function CreateSession() {
                 placeholder="Describe what students will learn..."
                 required
               />
+            </div>
+
+            <div className="form-group">
+              <label>Session Thumbnail</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleThumbnailChange}
+                className="file-input"
+              />
+              {thumbnailPreview && (
+                <div className="thumbnail-preview">
+                  <img src={thumbnailPreview} alt="Thumbnail preview" />
+                  <button
+                    type="button"
+                    className="remove-thumbnail"
+                    onClick={() => {
+                      setThumbnailFile(null);
+                      setThumbnailPreview(null);
+                    }}
+                  >
+                    ✕ Remove
+                  </button>
+                </div>
+              )}
+              <small className="form-hint">
+                Optional. Max 10MB. Supported formats: JPEG, PNG, GIF, WebP
+              </small>
             </div>
 
             <div className="form-row">
@@ -178,11 +254,12 @@ function CreateSession() {
                 type="button"
                 className="btn btn-outline"
                 onClick={() => navigate('/creator/dashboard')}
+                disabled={loading}
               >
                 Cancel
               </button>
-              <button type="submit" className="btn btn-primary" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Session'}
+              <button type="submit" className="btn btn-primary" disabled={loading || uploading}>
+                {uploading ? 'Uploading image...' : loading ? 'Creating...' : 'Create Session'}
               </button>
             </div>
           </form>

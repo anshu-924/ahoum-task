@@ -151,4 +151,25 @@ export const getCreatorDashboard = async () => {
   return response.data;
 };
 
+// File Upload
+export const uploadFile = async (file, folder = 'sessions') => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('folder', folder);
+
+  const response = await api.post('/storage/upload/', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return response.data;
+};
+
+export const deleteFile = async (key) => {
+  const response = await api.delete('/storage/delete/', {
+    data: { key },
+  });
+  return response.data;
+};
+
 export default api;

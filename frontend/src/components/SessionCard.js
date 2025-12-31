@@ -3,8 +3,21 @@ import { Link } from 'react-router-dom';
 import './SessionCard.css';
 
 function SessionCard({ session, showActions, onUpdate, showEnrollButton, isEnrolled }) {
+  // Use uploaded thumbnail or default image
+  const thumbnailUrl = session.thumbnail_url || '/image/thumbnail_temmplate.jpg';
+  
   return (
     <div className="session-card card">
+      <div className="session-thumbnail">
+        <img 
+          src={thumbnailUrl} 
+          alt={session.title}
+          onError={(e) => {
+            e.target.src = '/image/thumbnail_temmplate.jpg';
+          }}
+        />
+      </div>
+      
       <div className="session-card-header">
         <span className="category-badge">{session.category}</span>
         <span className="status-badge status-{session.status}">{session.status}</span>

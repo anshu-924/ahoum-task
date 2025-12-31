@@ -103,6 +103,17 @@ function SessionDetail() {
 
         <div className="detail-grid">
           <div className="detail-content">
+            <div className="session-image-container">
+              <img 
+                src={session.image_url || session.thumbnail_url || '/image/thumbnail_temmplate.jpg'} 
+                alt={session.title}
+                className="session-detail-image"
+                onError={(e) => {
+                  e.target.src = '/image/thumbnail_temmplate.jpg';
+                }}
+              />
+            </div>
+            
             <div className="session-header">
               <span className="category-badge">{session.category}</span>
               <h1>{session.title}</h1>

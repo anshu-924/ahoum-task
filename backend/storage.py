@@ -81,6 +81,11 @@ def upload_file(request):
         )
     
     try:
+        # Read file into memory first to avoid "closed file" issues
+        file_obj.seek(0)
+        file_content = file_obj.read()
+        file_obj.seek(0)
+        
         # Generate unique filename
         ext = os.path.splitext(file_obj.name)[1]
         base_filename = str(uuid.uuid4())
@@ -93,10 +98,10 @@ def upload_file(request):
         
         s3_client = get_s3_client()
         
-        # Upload original image
-        file_obj.seek(0)
+        # Upload original image using BytesIO
+        original_io = io.BytesIO(file_content)
         s3_client.upload_fileobj(
-            file_obj,
+            original_io,
             settings.AWS_STORAGE_BUCKET_NAME,
             original_key,
             ExtraArgs={
@@ -105,9 +110,9 @@ def upload_file(request):
             }
         )
         
-        # Create and upload thumbnail
-        file_obj.seek(0)
-        thumbnail_io = create_thumbnail(file_obj)
+        # Create and upload thumbnail using a fresh BytesIO
+        thumbnail_source = io.BytesIO(file_content)
+        thumbnail_io = create_thumbnail(thumbnail_source)
         s3_client.upload_fileobj(
             thumbnail_io,
             settings.AWS_STORAGE_BUCKET_NAME,

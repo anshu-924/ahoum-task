@@ -33,3 +33,64 @@
   color: #666666;
   margin-right: 8px;
 }
+
+/* File Upload Styles */
+.file-input {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed #ddd;
+  border-radius: 8px;
+  cursor: pointer;
+  background-color: #f9f9f9;
+  transition: all 0.3s ease;
+}
+
+.file-input:hover {
+  border-color: #6366f1;
+  background-color: #f5f5ff;
+}
+
+.thumbnail-preview {
+  margin-top: 15px;
+  position: relative;
+  display: inline-block;
+}
+
+.thumbnail-preview img {
+  max-width: 300px;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  display: block;
+}
+
+.remove-thumbnail {
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s;
+}
+
+.remove-thumbnail:hover {
+  background: #dc2626;
+}
+
+.form-hint {
+  display: block;
+  margin-top: 8px;
+  color: #6b7280;
+  font-size: 14px;
+}
