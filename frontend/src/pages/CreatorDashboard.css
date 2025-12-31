@@ -1,0 +1,31 @@
+.creator-dashboard .dashboard-header {
+  margin-bottom: 32px;
+}
+
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid #e0e0e0;
+}
+
+.tab {
+  padding: 12px 24px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 500;
+  color: #666666;
+  transition: all 0.3s ease;
+}
+
+.tab:hover {
+  color: #000000;
+}
+
+.tab.active {
+  color: #000000;
+  border-bottom-color: #000000;
+}

@@ -1,0 +1,35 @@
+# Django Core
+Django==4.2.8
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+python-decouple==3.8
+
+# Database
+psycopg2-binary==2.9.9
+
+# Authentication
+djangorestframework-simplejwt==5.3.1
+social-auth-app-django==5.4.0
+PyJWT==2.8.0
+
+# Image Processing
+Pillow==10.1.0
+
+# API & Utilities
+django-filter==23.5
+drf-yasg==1.21.7
+
+# Payment (Bonus)
+stripe==7.9.0
+
+# File Storage (Bonus)
+boto3==1.34.14
+django-storages==1.14.2
+
+# Rate Limiting (Bonus)
+django-ratelimit==4.1.0
+
+# Additional
+python-dotenv==1.0.0
+gunicorn==21.2.0
+whitenoise==6.6.0
