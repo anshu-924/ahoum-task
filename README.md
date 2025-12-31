@@ -274,7 +274,9 @@ ahoum/
 - Docker & Docker Compose installed
 - Python 3.11+ (for local development)
 - PostgreSQL 15+ (for local development)
-- Google/GitHub OAuth credentials
+- Google/GitHub OAuth credentials (see OAuth Setup)
+
+> **⚠️ SECURITY NOTICE:** Before deploying to production, please review [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for critical security configurations and best practices.
 
 ### Option 1: Docker Deployment (Recommended)
 
@@ -284,13 +286,19 @@ git clone <your-repo-url>
 cd ahoum
 ```
 
-2. **Set up environment variables**
+2. **Set up backend environment variables**
 ```bash
 cp .env.example .env
-# Edit .env with your credentials
+# Edit .env with your credentials (see Environment Variables section)
 ```
 
-3. **Start all services**
+3. **Set up frontend environment variables**
+```bash
+cp frontend/.env.example frontend/.env
+# Edit frontend/.env with your OAuth Client IDs
+```
+
+4. **Start all services**
 ```bash
 docker-compose up --build
 ```
@@ -356,6 +364,8 @@ python manage.py runserver
 
 ## 🔐 OAuth Setup Instructions
 
+> **⚠️ IMPORTANT:** OAuth credentials must be configured in both backend and frontend environment files. Never commit actual credentials to version control.
+
 ### Google OAuth Setup
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
@@ -364,13 +374,18 @@ python manage.py runserver
 4. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client ID"
 5. Configure consent screen
 6. Add authorized redirect URIs:
-   - `http://localhost:3000/auth/callback` (frontend)
-   - `http://localhost/auth/callback`
-7. Copy Client ID and Client Secret to `.env`:
-   ```
-   GOOGLE_OAUTH_CLIENT_ID=your-client-id
-   GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
-   ```
+   - `http://localhost:3000/auth/callback` (frontend dev)
+   - `http://localhost/auth/callback` (docker)
+7. Copy Client ID and Client Secret:
+   - Backend `.env`:
+     ```env
+     GOOGLE_OAUTH_CLIENT_ID=your-client-id
+     GOOGLE_OAUTH_CLIENT_SECRET=your-client-secret
+     ```
+   - Frontend `.env`:
+     ```env
+     REACT_APP_GOOGLE_CLIENT_ID=your-client-id
+     ```
 
 ### GitHub OAuth Setup
 
@@ -380,11 +395,18 @@ python manage.py runserver
    - Application name: Sessions Marketplace
    - Homepage URL: `http://localhost`
    - Authorization callback URL: `http://localhost:3000/auth/callback`
-4. Copy Client ID and Client Secret to `.env`:
-   ```
-   GITHUB_OAUTH_CLIENT_ID=your-client-id
-   GITHUB_OAUTH_CLIENT_SECRET=your-client-secret
-   ```
+4. Copy Client ID and Client Secret:
+   - Backend `.env`:
+     ```env
+     GITHUB_OAUTH_CLIENT_ID=your-client-id
+     GITHUB_OAUTH_CLIENT_SECRET=your-client-secret
+     ```
+   - Frontend `.env`:
+     ```env
+     REACT_APP_GITHUB_CLIENT_ID=your-client-id
+     ```
+
+> **🔒 Security Note:** Keep your OAuth Client Secrets private! Only Client IDs are used in the frontend. Secrets should only be in the backend `.env` file.
 
 ## 📡 API Endpoints
 
@@ -617,14 +639,30 @@ python manage.py shell
 
 ## 🔒 Security Features
 
-- JWT-based authentication with refresh tokens
-- Role-based access control (RBAC)
-- Custom permissions for endpoints
-- CORS configuration
-- SQL injection protection (Django ORM)
-- XSS protection
-- CSRF protection
-- Secure password hashing
+- **JWT Authentication** - Access tokens (1 day) + Refresh tokens (7 days)
+- **Role-Based Access Control (RBAC)** - User/Creator permissions
+- **OAuth 2.0** - Google and GitHub social authentication
+- **Environment Variables** - All secrets managed via `.env` files
+- **CORS Configuration** - Restricted cross-origin requests
+- **SQL Injection Protection** - Django ORM parameterized queries
+- **XSS Protection** - React's built-in sanitization
+- **CSRF Protection** - Django CSRF middleware
+- **Secure Password Hashing** - PBKDF2 algorithm
+- **Security Audit** - See [SECURITY_AUDIT.md](SECURITY_AUDIT.md) for complete checklist
+
+### Production Security Checklist
+
+Before deploying to production:
+- [ ] Review [SECURITY_AUDIT.md](SECURITY_AUDIT.md)
+- [ ] Set `DEBUG=False`
+- [ ] Generate strong `SECRET_KEY`
+- [ ] Change default database passwords
+- [ ] Regenerate OAuth credentials if previously exposed
+- [ ] Configure HTTPS/SSL certificates
+- [ ] Restrict `ALLOWED_HOSTS` to production domains
+- [ ] Limit `CORS_ALLOWED_ORIGINS` to production frontend
+- [ ] Use production Stripe keys (not test keys)
+- [ ] Configure proper AWS S3 bucket policies
 
 ## 🧪 Testing
 
@@ -656,7 +694,61 @@ coverage report
 
 ## 📝 Environment Variables
 
-See [.env.example](.env.example) for all required environment variables.
+### Backend Environment Variables
+
+Create `.env` in the project root with the following variables (see [.env.example](.env.example)):
+
+```env
+# Django Settings
+SECRET_KEY=your-secret-key-here
+DEBUG=True
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+# Database
+DB_NAME=sessions_marketplace
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_HOST=localhost
+DB_PORT=5432
+
+# CORS Settings
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,http://localhost:80
+
+# Google OAuth
+GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
+
+# GitHub OAuth
+GITHUB_OAUTH_CLIENT_ID=your-github-client-id
+GITHUB_OAUTH_CLIENT_SECRET=your-github-client-secret
+
+# Stripe (Optional)
+STRIPE_PUBLISHABLE_KEY=pk_test_your_key
+STRIPE_SECRET_KEY=sk_test_your_key
+STRIPE_WEBHOOK_SECRET=whsec_your_secret
+
+# S3/MinIO (Optional)
+USE_S3=True
+AWS_ACCESS_KEY_ID=minioadmin
+AWS_SECRET_ACCESS_KEY=minioadmin123
+AWS_STORAGE_BUCKET_NAME=sessions
+AWS_S3_ENDPOINT_URL=http://localhost:9000
+AWS_S3_REGION_NAME=us-east-1
+```
+
+### Frontend Environment Variables
+
+Create `frontend/.env` with the following variables (see [frontend/.env.example](frontend/.env.example)):
+
+```env
+REACT_APP_API_URL=http://localhost/api
+REACT_APP_GOOGLE_CLIENT_ID=your-google-client-id
+REACT_APP_GITHUB_CLIENT_ID=your-github-client-id
+```
+
+> **⚠️ IMPORTANT:** Never commit `.env` files to Git. Only commit `.env.example` files with placeholder values.
+
+For detailed security configuration and production deployment guidelines, see [SECURITY_AUDIT.md](SECURITY_AUDIT.md).
 
 ## 🐛 Troubleshooting
 
@@ -677,9 +769,25 @@ python manage.py migrate
 ```
 
 ### OAuth Issues
-- Verify client IDs and secrets in `.env`
-- Check redirect URIs match OAuth app settings
-- Ensure access tokens are valid
+- **Backend:** Verify client IDs and secrets in root `.env`
+- **Frontend:** Verify client IDs in `frontend/.env`
+- Check redirect URIs match OAuth app settings exactly
+- Ensure OAuth apps are approved and not in restricted mode
+- For development, use `http://localhost` (not `127.0.0.1`)
+- Check browser console for OAuth errors
+- Verify environment variables are loaded: `console.log(process.env.REACT_APP_GOOGLE_CLIENT_ID)`
+
+### Frontend Environment Variables Not Loading
+```bash
+# Restart frontend dev server after changing .env
+npm start
+
+# Or rebuild Docker container
+docker-compose up --build frontend
+
+# Verify .env file exists
+ls frontend/.env
+```
 
 ## 📄 License
 
