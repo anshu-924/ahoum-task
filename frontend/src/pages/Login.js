@@ -11,8 +11,8 @@ function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  const GOOGLE_CLIENT_ID = '256952312824-4og6bbf32p58178ojqm642gfkgv795ro.apps.googleusercontent.com';
-  const GITHUB_CLIENT_ID = 'Ov23li7bXC4RlozzV9qR';
+  const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID;
+  const GITHUB_CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID;
   // Use current origin for redirect (works with localhost:3000 dev or localhost prod)
   const REDIRECT_URI = window.location.origin + '/login';
 

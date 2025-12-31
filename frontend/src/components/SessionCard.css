@@ -100,16 +100,11 @@
   font-size: 14px;
   padding: 0 20px;
 }
-
-/* =========================
-   ONLY COMPACT SECTION
-   ========================= */
-
 .session-footer {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 20px 16px 20px; /* reduced vertical padding */
+  padding: 12px 20px 14px 20px;
   border-top: 1px solid #e0e0e0;
   margin-top: auto;
 }
@@ -121,32 +116,21 @@
 }
 
 .price .amount {
-  font-size: 18px;     /* was 24px */
-  font-weight: 600;
+  font-size: 12px;     /* main emphasis */
+  font-weight: 700;
   color: #000;
 }
 
 .price .currency {
-  font-size: 12px;     /* was 14px */
+  font-size: 12px;     /* secondary */
+  font-weight: 500;
   color: #666;
 }
 
-/* smaller View Details / Enroll button */
+/* compact but balanced button */
 .session-footer .btn {
-  padding: 6px 14px;   /* smaller button */
-  font-size: 13px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
   border-radius: 6px;
-}
-
-/* ========================= */
-
-.session-actions {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e0e0e0;
-}
-
-.btn-sm {
-  padding: 8px 16px;
-  font-size: 14px;
 }
