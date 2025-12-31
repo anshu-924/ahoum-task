@@ -137,6 +137,18 @@ REST_FRAMEWORK = {
         'rest_framework.filters.OrderingFilter',
     ],
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle',
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',  # Anonymous users: 100 requests per hour
+        'user': '1000/hour',  # Authenticated users: 1000 requests per hour
+        'auth': '10/minute',  # Auth endpoints: 10 attempts per minute
+        'booking': '20/hour',  # Booking creation: 20 per hour
+        'session_create': '10/hour',  # Session creation: 10 per hour
+        'payment': '10/hour',  # Payment operations: 10 per hour
+    },
 }
 
 # JWT Configuration

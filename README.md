@@ -16,10 +16,10 @@
 - ✅ **Responsive Frontend** - Clean black, grey, white design
 
 ### Bonus Features
-- 💳 **Stripe Payment Integration** (test mode)
 - 📁 **S3/MinIO File Uploads** for images
 - 🔒 **CORS & Security** configured
 - 📊 **Admin Panel** with custom models
+- 🚦 **Rate Limiting** - API throttling for security and abuse prevention
 
 ## 📋 Tech Stack
 
@@ -37,6 +37,7 @@
 - **Reverse Proxy**: Nginx
 - **Payment**: Stripe (Bonus)
 - **Storage**: AWS S3 / MinIO (Bonus)
+- **Rate Limiting**: Django REST Framework Throttling + django-ratelimit
 
 ## 🏗️ Project Structure
 
@@ -453,6 +454,14 @@ python manage.py shell
 - **JWT Authentication** - Access tokens (1 day) + Refresh tokens (7 days)
 - **Role-Based Access Control (RBAC)** - User/Creator permissions
 - **OAuth 2.0** - Google and GitHub social authentication
+- **Rate Limiting** - API throttling to prevent abuse:
+  - Anonymous users: 100 requests/hour
+  - Authenticated users: 1000 requests/hour
+  - Auth endpoints: 10 attempts/minute
+  - Booking creation: 20/hour
+  - Session creation: 10/hour
+  - Payment operations: 10/hour
+  - File uploads: 30/hour
 - **Environment Variables** - All secrets managed via `.env` files
 - **CORS Configuration** - Restricted cross-origin requests
 - **SQL Injection Protection** - Django ORM parameterized queries
@@ -474,6 +483,56 @@ Before deploying to production:
 - [ ] Limit `CORS_ALLOWED_ORIGINS` to production frontend
 - [ ] Use production Stripe keys (not test keys)
 - [ ] Configure proper AWS S3 bucket policies
+- [ ] Review and adjust rate limiting thresholds if needed
+
+## 🚦 Rate Limiting
+
+The API implements comprehensive rate limiting to prevent abuse and ensure fair usage:
+
+### Default Rate Limits
+
+| User Type | Limit | Description |
+|-----------|-------|-------------|
+| Anonymous | 100/hour | Unauthenticated requests |
+| Authenticated | 1000/hour | Logged-in users |
+
+### Endpoint-Specific Limits
+
+| Endpoint | Limit | Reason |
+|----------|-------|--------|
+| `/api/auth/oauth/login/` | 10/minute | Prevent brute force attacks |
+| `/api/auth/token/refresh/` | 10/minute | Prevent token abuse |
+| `/api/bookings/` (POST) | 20/hour | Prevent spam bookings |
+| `/api/sessions/` (POST) | 10/hour | Limit session creation |
+| `/api/payment/*` | 10/hour | Prevent payment abuse |
+| `/api/storage/upload/` | 30/hour | Limit file uploads |
+
+### Rate Limit Responses
+
+When rate limit is exceeded, the API returns:
+```json
+{
+  "detail": "Request was throttled. Expected available in X seconds."
+}
+```
+HTTP Status: `429 Too Many Requests`
+
+### Customizing Rate Limits
+
+Rate limits can be adjusted in [core/settings.py](core/settings.py):
+
+```python
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'auth': '10/minute',
+        'booking': '20/hour',
+        'session_create': '10/hour',
+        'payment': '10/hour',
+    },
+}
+```
 
 ## 🧪 Testing
 

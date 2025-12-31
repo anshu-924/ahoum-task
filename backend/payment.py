@@ -1,20 +1,28 @@
 import stripe
 from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
+from rest_framework.throttling import UserRateThrottle
 from .models import Booking
 from django.shortcuts import get_object_or_404
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 
 
+# Custom throttle for payment operations
+class PaymentThrottle(UserRateThrottle):
+    rate = '10/hour'
+
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([PaymentThrottle])
 def create_payment_intent(request):
     """
     Create a Stripe payment intent for a booking
+    Rate limited to 10 requests per hour
     """
     booking_id = request.data.get('booking_id')
     
@@ -65,9 +73,11 @@ def create_payment_intent(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@throttle_classes([PaymentThrottle])
 def confirm_payment(request):
     """
     Confirm payment after successful Stripe transaction
+    Rate limited to 10 requests per hour
     """
     payment_intent_id = request.data.get('payment_intent_id')
     

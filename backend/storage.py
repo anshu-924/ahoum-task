@@ -1,15 +1,21 @@
 import boto3
 from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes, parser_classes
+from rest_framework.decorators import api_view, permission_classes, parser_classes, throttle_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status
+from rest_framework.throttling import UserRateThrottle
 from botocore.exceptions import ClientError
 from PIL import Image
 import io
 import uuid
 import os
+
+
+# Custom throttle for file uploads
+class UploadThrottle(UserRateThrottle):
+    rate = '30/hour'
 
 
 def get_s3_client():
@@ -47,10 +53,12 @@ def create_thumbnail(image_file, max_size=(300, 300)):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
+@throttle_classes([UploadThrottle])
 def upload_file(request):
     """
     Upload file to S3/MinIO with automatic thumbnail generation for images
     Returns both image_url and thumbnail_url
+    Rate limited to 30 uploads per hour
     """
     if not settings.USE_S3:
         return Response(

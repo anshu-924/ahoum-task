@@ -1,11 +1,14 @@
 from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.decorators import action, api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.throttling import UserRateThrottle, AnonRateThrottle
 from django.contrib.auth import get_user_model
 from django.db.models import Q, Count
 from django.utils import timezone
 from django.conf import settings
+from django_ratelimit.decorators import ratelimit
+from django.views.decorators.cache import cache_page
 import requests
 from .models import Session, Booking
 from .serializers import (
@@ -20,13 +23,33 @@ from .permissions import IsCreator, IsOwnerOrReadOnly, IsBookingOwnerOrSessionCr
 User = get_user_model()
 
 
+# Custom throttle classes
+class AuthRateThrottle(UserRateThrottle):
+    rate = '10/minute'
+
+
+class BookingCreateThrottle(UserRateThrottle):
+    rate = '20/hour'
+
+
+class SessionCreateThrottle(UserRateThrottle):
+    rate = '10/hour'
+
+
+class PaymentThrottle(UserRateThrottle):
+    rate = '10/hour'
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def oauth_login(request):
     """
     OAuth login endpoint
     Accepts provider (google/github) and access_token
     Returns JWT tokens and user info
+    Rate limited to 10 requests per minute per IP
     """
     serializer = OAuthLoginSerializer(data=request.data)
     serializer.is_valid(raise_exception=True)
@@ -73,10 +96,13 @@ def oauth_login(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@throttle_classes([AuthRateThrottle])
+@ratelimit(key='ip', rate='10/m', method='POST', block=True)
 def github_code_exchange(request):
     """
     Exchange GitHub authorization code for access token
     Then perform OAuth login
+    Rate limited to 10 requests per minute per IP
     """
     code = request.data.get('code')
     role = request.data.get('role', 'user')
@@ -214,6 +240,18 @@ class SessionViewSet(viewsets.ModelViewSet):
             return [IsAuthenticated(), IsOwnerOrReadOnly()]
         return super().get_permissions()
     
+    def get_throttles(self):
+        """Apply stricter throttling for session creation"""
+        if self.action == 'create':
+            return [SessionCreateThrottle()]
+        return super().get_throttles()
+    
+    def get_throttles(self):
+        """Apply stricter throttling for session creation"""
+        if self.action == 'create':
+            return [SessionCreateThrottle()]
+        return super().get_throttles()
+    
     def perform_create(self, serializer):
         """Set creator to current user"""
         if self.request.user.role != 'creator':
@@ -275,6 +313,18 @@ class BookingViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update', 'destroy']:
             return [IsAuthenticated(), IsBookingOwnerOrSessionCreator()]
         return super().get_permissions()
+    
+    def get_throttles(self):
+        """Apply stricter throttling for booking creation"""
+        if self.action == 'create':
+            return [BookingCreateThrottle()]
+        return super().get_throttles()
+    
+    def get_throttles(self):
+        """Apply stricter throttling for booking creation"""
+        if self.action == 'create':
+            return [BookingCreateThrottle()]
+        return super().get_throttles()
     
     def perform_create(self, serializer):
         """Create booking with current user"""
